@@ -295,6 +295,15 @@ class elimination(Exportercode):
         self.nompossible=liste
         print("final",self.nompossible)
         self.compteurs+=1
+    def test(self):
+        ##Wait va servir a attendre, que le premier mot est marqué
+        wait = WebDriverWait(self.driver, 9)
+        # Divs va contenir toutes les lettres qui sont grisé
+        divs = wait.until(
+            EC.presence_of_all_elements_located((By.XPATH, "/html/body/div/div[3]/table/tr[3]")))
+
+        letters = [div.text for div in divs]
+        print("1",letters)
 # Cette classe va permettre de rentrer les mots de la liste dans le pendu
 """"
 class exportermot(Ouvrir):
@@ -342,7 +351,8 @@ def fonctionjouer(webdriver):
     case.caserouge()
     case.casejaune()
     Entrerlettre.rentrerdeslettres()
-
+    case.test()
+    lancerjeu.attendre()
 
 # cette variable lancera le programme
 fonctionjouer("webdriver.edge")

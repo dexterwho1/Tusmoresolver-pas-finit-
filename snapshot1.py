@@ -147,18 +147,37 @@ class Exportercode(ouvrirlefichiercorrespondant):
         # puisque le premier caractere est marqué dans la première case du sie internet, nous devons le supprimer pour eviter de faire une erreur de
         # style "aabandon"
         print(self.nompossible)
-        self.nompossible[6] = self.nompossible[6][1:]
+        self.nompossible[0] = self.nompossible[0][1:]
 
         print(self.nompossible)
 
         # Vu que il n'y a pas de zone de formulaire, nous allons simuler la pression de la touche dans send_keys
-        self.marquerlettre.send_keys(self.nompossible[6]).perform()
+        self.marquerlettre.send_keys(self.nompossible[0]).perform()
 
         # Keys return corresponds à la touche "Entrée"
         self.marquerlettre.send_keys(Keys.RETURN).perform()
 
         # supprimer l'élément de la liste afin d'éliminer le mot incorrect
         del self.nompossible[0]
+
+    def rentrerdeslettres2(self,motchoisis):
+        # Initialisation de marquerlettre, qui va gérer la simulation de pression du clavier.
+        self.marquerlettre = ActionChains(self.driver)
+        # puisque le premier caractere est marqué dans la première case du sie internet, nous devons le supprimer pour eviter de faire une erreur de
+        # style "aabandon"
+        print(self.nompossible)
+        self.nompossible[motchoisis] = self.nompossible[motchoisis][1:]
+
+        print(self.nompossible)
+
+        # Vu que il n'y a pas de zone de formulaire, nous allons simuler la pression de la touche dans send_keys
+        self.marquerlettre.send_keys(self.nompossible[motchoisis]).perform()
+
+        # Keys return corresponds à la touche "Entrée"
+        self.marquerlettre.send_keys(Keys.RETURN).perform()
+
+        # supprimer l'élément de la liste afin d'éliminer le mot incorrect
+        del self.nompossible[motchoisis]
 
 
 ## Cette classe va éliminer des mots selon les règles du jeu
@@ -170,7 +189,7 @@ class elimination(Exportercode):
         self.devinerpremierelettre()
         self.ouvrirfichier()
         self.creerliste()
-
+        self.compteurs=1
     # Selon la règle du jeu, une lettre qui est grisé dans le clavier numérique, signifie que le mot que l'on cherche, ne possède pas cette lettre
     # Nous avons donc besoin pour cette première couche d'élimination de retirer tout les mots comportant, les lettres que nous n'avont pas besoin
 
@@ -191,11 +210,11 @@ class elimination(Exportercode):
         self.nompossible=liste
         print("1",len(liste))
     #ex : si nous entrons le mot fer: et que le site indique que le e par exemple, n'est pas a sa bonne place, nous pouvons supprimer, tout les mots contenant e au deuxième caractère
-    def caserouge(self, compteurs):
-        print(len(self.nompossible))
+    def caserouge(self):
 
         #la ligne, envoie la ligne en recherche du site internet. Par exemple "M.N..E", on va chercher cela dans la balise TR, car les lettres sont contenus dans des balises "td"
         #compteur contient le nombre de ligne restant
+
         ligne = self.driver.find_element(By.XPATH, "/html/body/div/div[3]/table/tr[1]")
 
         #maintenant que nous avons récolté la liste, nous allons faire une sous recherche, pour trouver la classe de chaque TD,
@@ -209,7 +228,6 @@ class elimination(Exportercode):
         for td in td_list[1:]:
 
 
-
             # Passons à la seconde couche d'élimination, en prenant les lettres obligatoire et leurs index et en supprimant les mots où l'emplacement des lettres n'est pas bonne
 
             #bien-place resultat correspond à la classe des lettres qui ont été trouvé, nous allons donc faire une instruction, lorsque la case
@@ -220,24 +238,63 @@ class elimination(Exportercode):
                 #nous allons maintenant parcourir, chaque mot de la liste, et créer une nouvelle liste qui contiendra les mots à la bonne place
                 for i in range(len(self.nompossible)):
 
-                    if self.nompossible[i][7] == td.text.lower():
-                        print("i")
-                        print(self.nompossible[i])
+                    # nous allons maintenant parcourir, chaque mot de la liste, et créer une nouvelle liste qui contiendra les mots à la bonne place
+                    if self.nompossible[i][td_list[1:].index(td)+1] == td.text.lower():
+
+                        #si la place du caractère recherché est égal au caractère à la place du mot de la liste
+
                         liste.append(self.nompossible[i])
 
 
                 # self.possible = [word for word in self.nompossible if not any(letter in word for letter in letters)]
-                print(len(liste))
-            compteur += 1
+        # maintenant, nous avons une liste filtrée, nous n'avons plus que à supprimé les doublons:
 
-        #maintenant, nous avons une liste filtrée, nous n'avons plus que à supprimé les doublons:
-
-        #création d'une fonction, qui va créer une liste d'ensemble (qui va automatiquement supprimer les doublons)
+        # création d'une fonction, qui va créer une liste d'ensemble (qui va automatiquement supprimer les doublons)
         remove_duplicates = lambda input_list: list(set(input_list))
         liste = remove_duplicates(liste)
-        print(liste)
+        self.nompossible=liste
 
 
+    def casejaune(self):
+
+        # la ligne, envoie la ligne en recherche du site internet. Par exemple "M.N..E", on va chercher cela dans la balise TR, car les lettres sont contenus dans des balises "td"
+        # compteur contient le nombre de ligne restant
+        ligne = self.driver.find_element(By.XPATH, "/html/body/div/div[3]/table/tr[1]")
+        # maintenant que nous avons récolté la liste, nous allons faire une sous recherche, pour trouver la classe de chaque TD,
+        # Ainsi nous pouvons voir les différentes état des lettres, non-trouver, trouvé, pas à leur place
+        td_list = ligne.find_elements(By.TAG_NAME, "td")
+        compteur = 0
+        # création d'une liste qui va contenir les mots filtrés
+        liste = []
+
+        # Nous allons parcourir toute les cases pour savoir l'état des lettres
+        for td in td_list[1:]:
+
+            # Passons à la seconde couche d'élimination, en prenant les lettres obligatoire et leurs index et en supprimant les mots où l'emplacement des lettres n'est pas bonne
+
+            # bien-place resultat correspond à la classe des lettres qui ont été trouvé, nous allons donc faire une instruction, lorsque la case
+            # dans la liste de case contient une lettre bien placé
+            if td.get_attribute('class') == 'mal-place resultat':
+                print(td.get_attribute('class'), td.text, compteur)
+
+                # nous allons maintenant parcourir, chaque mot de la liste, et créer une nouvelle liste qui contiendra les mots à la bonne place
+                for i in range(len(self.nompossible)):
+
+                    # nous allons maintenant parcourir, chaque mot de la liste, et créer une nouvelle liste qui contiendra les mots à la bonne place
+                    if self.nompossible[i][td_list[1:].index(td) + 1] != td.text.lower():
+                        # si la place du caractère recherché est égal au caractère à la place du mot de la liste
+
+                        liste.append(self.nompossible[i])
+
+                # self.possible = [word for word in self.nompossible if not any(letter in word for letter in letters)]
+           # maintenant, nous avons une liste filtrée, nous n'avons plus que à supprimé les doublons:
+
+        # création d'une fonction, qui va créer une liste d'ensemble (qui va automatiquement supprimer les doublons)
+        remove_duplicates = lambda input_list: list(set(input_list))
+        liste = remove_duplicates(liste)
+        self.nompossible=liste
+        print("final",self.nompossible)
+        self.compteurs+=1
 # Cette classe va permettre de rentrer les mots de la liste dans le pendu
 """"
 class exportermot(Ouvrir):
@@ -282,7 +339,9 @@ def fonctionjouer(webdriver):
     case = elimination(lancerjeu.driver, fichier.compteur, fichier.motatrouver)
 
     case.casegrise()
-    case.caserouge(3)
+    case.caserouge()
+    case.casejaune()
+    Entrerlettre.rentrerdeslettres()
 
 
 # cette variable lancera le programme
