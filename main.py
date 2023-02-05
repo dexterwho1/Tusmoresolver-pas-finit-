@@ -1,5 +1,4 @@
 #crédit gabinbsn
-
 ### Bibliothèque graphique
 
 ##cette bibliothèque importe le webdriver
@@ -148,26 +147,7 @@ class Exportercode(ouvrirlefichiercorrespondant):
         self.marquerlettre = ActionChains(self.driver)
         # puisque le premier caractere est marqué dans la première case du sie internet, nous devons le supprimer pour eviter de faire une erreur de
         # style "aabandon"
-        print(self.nompossible)
-        self.nompossible[4] = self.nompossible[4][1:]
-
-        print(self.nompossible)
-
-        # Vu que il n'y a pas de zone de formulaire, nous allons simuler la pression de la touche dans send_keys
-        self.marquerlettre.send_keys(self.nompossible[4]).perform()
-
-        # Keys return corresponds à la touche "Entrée"
-        self.marquerlettre.send_keys(Keys.RETURN).perform()
-
-        # supprimer l'élément de la liste afin d'éliminer le mot incorrect
-        del self.nompossible[4]
-
-    def rentrerdeslettres2(self):
-        # Initialisation de marquerlettre, qui va gérer la simulation de pression du clavier.
-        self.marquerlettre = ActionChains(self.driver)
-        # puisque le premier caractere est marqué dans la première case du sie internet, nous devons le supprimer pour eviter de faire une erreur de
-        # style "aabandon"
-        print(self.nompossible)
+        print("i",self.nompossible)
         self.nompossible[0] = self.nompossible[0][1:]
 
         print(self.nompossible)
@@ -180,6 +160,28 @@ class Exportercode(ouvrirlefichiercorrespondant):
 
         # supprimer l'élément de la liste afin d'éliminer le mot incorrect
         del self.nompossible[0]
+
+    def rentrerdeslettres2(self):
+        # Initialisation de marquerlettre, qui va gérer la simulation de pression du clavier.
+        self.marquerlettre = ActionChains(self.driver)
+        # puisque le premier caractere est marqué dans la première case du sie internet, nous devons le supprimer pour eviter de faire une erreur de
+        # style "aabandon"
+        print(self.nompossible)
+        premiermot=self.nompossible[0][1:]
+        print("premier mot",self.nompossible[0])
+        del self.nompossible[0]
+        print("premier mot",self.nompossible[0])
+
+
+        print(self.nompossible)
+
+        # Vu que il n'y a pas de zone de formulaire, nous allons simuler la pression de la touche dans send_keys
+        self.marquerlettre.send_keys(premiermot).perform()
+
+        # Keys return corresponds à la touche "Entrée"
+        self.marquerlettre.send_keys(Keys.RETURN).perform()
+
+        # supprimer l'élément de la liste afin d'éliminer le mot incorrect
 
 
 ## Cette classe va éliminer des mots selon les règles du jeu
@@ -213,12 +215,12 @@ class elimination(Exportercode):
         self.nompossible=liste
         print("1",len(liste))
     #ex : si nous entrons le mot fer: et que le site indique que le e par exemple, n'est pas a sa bonne place, nous pouvons supprimer, tout les mots contenant e au deuxième caractère
-    def caserouge(self):
+    def caserouge(self,signe):
 
         #la ligne, envoie la ligne en recherche du site internet. Par exemple "M.N..E", on va chercher cela dans la balise TR, car les lettres sont contenus dans des balises "td"
         #compteur contient le nombre de ligne restant
 
-        ligne = self.driver.find_element(By.XPATH, "/html/body/div/div[3]/table/tr[1]")
+        ligne = self.driver.find_element(By.XPATH, "/html/body/div/div[3]/table/tr{}".format(signe))
 
         #maintenant que nous avons récolté la liste, nous allons faire une sous recherche, pour trouver la classe de chaque TD,
         #Ainsi nous pouvons voir les différentes état des lettres, non-trouver, trouvé, pas à leur place
@@ -260,11 +262,11 @@ class elimination(Exportercode):
         self.nompossible=liste
 
 
-    def casejaune(self):
+    def casejaune(self,signe):
 
         # la ligne, envoie la ligne en recherche du site internet. Par exemple "M.N..E", on va chercher cela dans la balise TR, car les lettres sont contenus dans des balises "td"
         # compteur contient le nombre de ligne restant
-        ligne = self.driver.find_element(By.XPATH, "/html/body/div/div[3]/table/tr[1]")
+        ligne = self.driver.find_element(By.XPATH, "/html/body/div/div[3]/table/tr{}".format(signe))
         # maintenant que nous avons récolté la liste, nous allons faire une sous recherche, pour trouver la classe de chaque TD,
         # Ainsi nous pouvons voir les différentes état des lettres, non-trouver, trouvé, pas à leur place
         td_list = ligne.find_elements(By.TAG_NAME, "td")
@@ -299,8 +301,10 @@ class elimination(Exportercode):
         remove_duplicates = lambda input_list: list(set(input_list))
         liste = remove_duplicates(liste)
         print(len(self.nompossible))
-        print("final",len(liste))
         self.compteurs+=1
+        self.nompossible=liste
+        print("1final",self.nompossible)
+
     def test(self,signe):
         signe[0]+=1
         print("/html/body/div/div[3]/table/tr{}".format(signe))
@@ -343,15 +347,18 @@ def fonctionjouer(webdriver):
     # Instanciation de la sous-classe
     Entrerlettre = Exportercode(lancerjeu.driver, fichier.compteur, fichier.motatrouver)
     Entrerlettre.savoirquelleligne()
-    Entrerlettre.rentrerdeslettres()
 
     case = elimination(lancerjeu.driver, fichier.compteur, fichier.motatrouver)
 
-    case.casegrise()
-    case.caserouge()
-    case.casejaune()
+    signe[0]+=1
     for i in range(5):
-        case.test(signe)
+        Entrerlettre.rentrerdeslettres2()
+
+        time.sleep(3)
+        case.casegrise()
+        case.caserouge(signe)
+        case.casejaune(signe)
+
     lancerjeu.attendre()
 
 
