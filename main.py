@@ -1,3 +1,5 @@
+#crédit gabinbsn
+
 ### Bibliothèque graphique
 
 ##cette bibliothèque importe le webdriver
@@ -147,6 +149,25 @@ class Exportercode(ouvrirlefichiercorrespondant):
         # puisque le premier caractere est marqué dans la première case du sie internet, nous devons le supprimer pour eviter de faire une erreur de
         # style "aabandon"
         print(self.nompossible)
+        self.nompossible[4] = self.nompossible[4][1:]
+
+        print(self.nompossible)
+
+        # Vu que il n'y a pas de zone de formulaire, nous allons simuler la pression de la touche dans send_keys
+        self.marquerlettre.send_keys(self.nompossible[4]).perform()
+
+        # Keys return corresponds à la touche "Entrée"
+        self.marquerlettre.send_keys(Keys.RETURN).perform()
+
+        # supprimer l'élément de la liste afin d'éliminer le mot incorrect
+        del self.nompossible[4]
+
+    def rentrerdeslettres2(self):
+        # Initialisation de marquerlettre, qui va gérer la simulation de pression du clavier.
+        self.marquerlettre = ActionChains(self.driver)
+        # puisque le premier caractere est marqué dans la première case du sie internet, nous devons le supprimer pour eviter de faire une erreur de
+        # style "aabandon"
+        print(self.nompossible)
         self.nompossible[0] = self.nompossible[0][1:]
 
         print(self.nompossible)
@@ -159,25 +180,6 @@ class Exportercode(ouvrirlefichiercorrespondant):
 
         # supprimer l'élément de la liste afin d'éliminer le mot incorrect
         del self.nompossible[0]
-
-    def rentrerdeslettres2(self,motchoisis):
-        # Initialisation de marquerlettre, qui va gérer la simulation de pression du clavier.
-        self.marquerlettre = ActionChains(self.driver)
-        # puisque le premier caractere est marqué dans la première case du sie internet, nous devons le supprimer pour eviter de faire une erreur de
-        # style "aabandon"
-        print(self.nompossible)
-        self.nompossible[motchoisis] = self.nompossible[motchoisis][1:]
-
-        print(self.nompossible)
-
-        # Vu que il n'y a pas de zone de formulaire, nous allons simuler la pression de la touche dans send_keys
-        self.marquerlettre.send_keys(self.nompossible[motchoisis]).perform()
-
-        # Keys return corresponds à la touche "Entrée"
-        self.marquerlettre.send_keys(Keys.RETURN).perform()
-
-        # supprimer l'élément de la liste afin d'éliminer le mot incorrect
-        del self.nompossible[motchoisis]
 
 
 ## Cette classe va éliminer des mots selon les règles du jeu
@@ -195,6 +197,7 @@ class elimination(Exportercode):
 
     def casegrise(self):
         print(len(self.nompossible))
+        print("0",len(self.nompossible))
         ##Wait va servir a attendre, que le premier mot est marqué
         wait = WebDriverWait(self.driver, 3)
         # Divs va contenir toutes les lettres qui sont grisé
@@ -215,7 +218,7 @@ class elimination(Exportercode):
         #la ligne, envoie la ligne en recherche du site internet. Par exemple "M.N..E", on va chercher cela dans la balise TR, car les lettres sont contenus dans des balises "td"
         #compteur contient le nombre de ligne restant
 
-        ligne = self.driver.find_element(By.XPATH, "/html/body/div/div[3]/table/tr[{}]".format(self.compteurs))
+        ligne = self.driver.find_element(By.XPATH, "/html/body/div/div[3]/table/tr[1]")
 
         #maintenant que nous avons récolté la liste, nous allons faire une sous recherche, pour trouver la classe de chaque TD,
         #Ainsi nous pouvons voir les différentes état des lettres, non-trouver, trouvé, pas à leur place
@@ -226,20 +229,21 @@ class elimination(Exportercode):
 
         #Nous allons parcourir toute les cases pour savoir l'état des lettres
         for td in td_list[1:]:
-
+            print("q",td.text)
 
             # Passons à la seconde couche d'élimination, en prenant les lettres obligatoire et leurs index et en supprimant les mots où l'emplacement des lettres n'est pas bonne
 
             #bien-place resultat correspond à la classe des lettres qui ont été trouvé, nous allons donc faire une instruction, lorsque la case
             #dans la liste de case contient une lettre bien placé
             if td.get_attribute('class') == 'bien-place resultat':
-                print(td.get_attribute('class'), td.text, compteur)
+                print("q",td.get_attribute('class'), td.text, compteur)
 
                 #nous allons maintenant parcourir, chaque mot de la liste, et créer une nouvelle liste qui contiendra les mots à la bonne place
                 for i in range(len(self.nompossible)):
 
                     # nous allons maintenant parcourir, chaque mot de la liste, et créer une nouvelle liste qui contiendra les mots à la bonne place
                     if self.nompossible[i][td_list[1:].index(td)+1] == td.text.lower():
+                        print("bien",self.nompossible[i])
 
                         #si la place du caractère recherché est égal au caractère à la place du mot de la liste
 
@@ -252,6 +256,7 @@ class elimination(Exportercode):
         # création d'une fonction, qui va créer une liste d'ensemble (qui va automatiquement supprimer les doublons)
         remove_duplicates = lambda input_list: list(set(input_list))
         liste = remove_duplicates(liste)
+        print("3",len(liste))
         self.nompossible=liste
 
 
@@ -259,7 +264,7 @@ class elimination(Exportercode):
 
         # la ligne, envoie la ligne en recherche du site internet. Par exemple "M.N..E", on va chercher cela dans la balise TR, car les lettres sont contenus dans des balises "td"
         # compteur contient le nombre de ligne restant
-        ligne = self.driver.find_element(By.XPATH, "/html/body/div/div[3]/table/tr[{}]".format(self.compteurs))
+        ligne = self.driver.find_element(By.XPATH, "/html/body/div/div[3]/table/tr[1]")
         # maintenant que nous avons récolté la liste, nous allons faire une sous recherche, pour trouver la classe de chaque TD,
         # Ainsi nous pouvons voir les différentes état des lettres, non-trouver, trouvé, pas à leur place
         td_list = ligne.find_elements(By.TAG_NAME, "td")
@@ -282,6 +287,7 @@ class elimination(Exportercode):
 
                     # nous allons maintenant parcourir, chaque mot de la liste, et créer une nouvelle liste qui contiendra les mots à la bonne place
                     if self.nompossible[i][td_list[1:].index(td) + 1] != td.text.lower():
+                        print("mal",self.nompossible[i])
                         # si la place du caractère recherché est égal au caractère à la place du mot de la liste
 
                         liste.append(self.nompossible[i])
@@ -292,8 +298,8 @@ class elimination(Exportercode):
         # création d'une fonction, qui va créer une liste d'ensemble (qui va automatiquement supprimer les doublons)
         remove_duplicates = lambda input_list: list(set(input_list))
         liste = remove_duplicates(liste)
-        self.nompossible=liste
-        print("final",self.nompossible)
+        print(len(self.nompossible))
+        print("final",len(liste))
         self.compteurs+=1
     def test(self):
         ##Wait va servir a attendre, que le premier mot est marqué
@@ -350,9 +356,9 @@ def fonctionjouer(webdriver):
     case.casegrise()
     case.caserouge()
     case.casejaune()
-    Entrerlettre.rentrerdeslettres()
-    case.test()
+    #case.test()
     lancerjeu.attendre()
+
 
 # cette variable lancera le programme
 fonctionjouer("webdriver.edge")
