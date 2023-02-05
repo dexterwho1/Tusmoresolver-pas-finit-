@@ -147,6 +147,25 @@ class Exportercode(ouvrirlefichiercorrespondant):
         # puisque le premier caractere est marqué dans la première case du sie internet, nous devons le supprimer pour eviter de faire une erreur de
         # style "aabandon"
         print(self.nompossible)
+        self.nompossible[4] = self.nompossible[4][1:]
+
+        print(self.nompossible)
+
+        # Vu que il n'y a pas de zone de formulaire, nous allons simuler la pression de la touche dans send_keys
+        self.marquerlettre.send_keys(self.nompossible[4]).perform()
+
+        # Keys return corresponds à la touche "Entrée"
+        self.marquerlettre.send_keys(Keys.RETURN).perform()
+
+        # supprimer l'élément de la liste afin d'éliminer le mot incorrect
+        del self.nompossible[4]
+
+    def rentrerdeslettres2(self):
+        # Initialisation de marquerlettre, qui va gérer la simulation de pression du clavier.
+        self.marquerlettre = ActionChains(self.driver)
+        # puisque le premier caractere est marqué dans la première case du sie internet, nous devons le supprimer pour eviter de faire une erreur de
+        # style "aabandon"
+        print(self.nompossible)
         self.nompossible[0] = self.nompossible[0][1:]
 
         print(self.nompossible)
@@ -159,25 +178,6 @@ class Exportercode(ouvrirlefichiercorrespondant):
 
         # supprimer l'élément de la liste afin d'éliminer le mot incorrect
         del self.nompossible[0]
-
-    def rentrerdeslettres2(self,motchoisis):
-        # Initialisation de marquerlettre, qui va gérer la simulation de pression du clavier.
-        self.marquerlettre = ActionChains(self.driver)
-        # puisque le premier caractere est marqué dans la première case du sie internet, nous devons le supprimer pour eviter de faire une erreur de
-        # style "aabandon"
-        print(self.nompossible)
-        self.nompossible[motchoisis] = self.nompossible[motchoisis][1:]
-
-        print(self.nompossible)
-
-        # Vu que il n'y a pas de zone de formulaire, nous allons simuler la pression de la touche dans send_keys
-        self.marquerlettre.send_keys(self.nompossible[motchoisis]).perform()
-
-        # Keys return corresponds à la touche "Entrée"
-        self.marquerlettre.send_keys(Keys.RETURN).perform()
-
-        # supprimer l'élément de la liste afin d'éliminer le mot incorrect
-        del self.nompossible[motchoisis]
 
 
 ## Cette classe va éliminer des mots selon les règles du jeu
@@ -208,7 +208,7 @@ class elimination(Exportercode):
         # self.possible prends la valeur du tableau self.nompossible sans les lettres grisées
         liste = [item for item in self.nompossible if all(char not in item for char in letters2)]
         self.nompossible=liste
-        print("1",len(liste))
+        print("1",liste)
     #ex : si nous entrons le mot fer: et que le site indique que le e par exemple, n'est pas a sa bonne place, nous pouvons supprimer, tout les mots contenant e au deuxième caractère
     def caserouge(self):
 
@@ -226,14 +226,14 @@ class elimination(Exportercode):
 
         #Nous allons parcourir toute les cases pour savoir l'état des lettres
         for td in td_list[1:]:
-
+            print("q",td.text)
 
             # Passons à la seconde couche d'élimination, en prenant les lettres obligatoire et leurs index et en supprimant les mots où l'emplacement des lettres n'est pas bonne
 
             #bien-place resultat correspond à la classe des lettres qui ont été trouvé, nous allons donc faire une instruction, lorsque la case
             #dans la liste de case contient une lettre bien placé
             if td.get_attribute('class') == 'bien-place resultat':
-                print(td.get_attribute('class'), td.text, compteur)
+                print("q",td.get_attribute('class'), td.text, compteur)
 
                 #nous allons maintenant parcourir, chaque mot de la liste, et créer une nouvelle liste qui contiendra les mots à la bonne place
                 for i in range(len(self.nompossible)):
@@ -292,9 +292,18 @@ class elimination(Exportercode):
         # création d'une fonction, qui va créer une liste d'ensemble (qui va automatiquement supprimer les doublons)
         remove_duplicates = lambda input_list: list(set(input_list))
         liste = remove_duplicates(liste)
-        self.nompossible=liste
-        print("final",self.nompossible)
+        print(len(self.nompossible))
+        print("final",len(liste))
         self.compteurs+=1
+    def test(self):
+        ##Wait va servir a attendre, que le premier mot est marqué
+        wait = WebDriverWait(self.driver, 9)
+        # Divs va contenir toutes les lettres qui sont grisé
+        divs = wait.until(
+            EC.presence_of_all_elements_located((By.XPATH, "/html/body/div/div[3]/table/tr[3]")))
+
+        letters = [div.text for div in divs]
+        print("1",letters)
 # Cette classe va permettre de rentrer les mots de la liste dans le pendu
 """"
 class exportermot(Ouvrir):
@@ -341,8 +350,8 @@ def fonctionjouer(webdriver):
     case.casegrise()
     case.caserouge()
     case.casejaune()
-    Entrerlettre.rentrerdeslettres()
-
+    #case.test()
+    lancerjeu.attendre()
 
 # cette variable lancera le programme
 fonctionjouer("webdriver.edge")
